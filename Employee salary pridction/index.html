@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Salary Prediction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(120deg, #f4f6f8 0%, #e0e7ef 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 420px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 32px 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 24px rgba(0,0,0,0.10);
+            position: relative;
+            animation: fadeInDown 1s cubic-bezier(.68,-0.55,.27,1.55);
+            z-index: 1;
+        }
+        @keyframes fadeInDown {
+            0% { opacity: 0; transform: translateY(-40px);}
+            100% { opacity: 1; transform: translateY(0);}
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 24px;
+            color: #333;
+            letter-spacing: 1px;
+            font-weight: 700;
+            animation: popIn 1s 0.2s backwards;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8);}
+            100% { opacity: 1; transform: scale(1);}
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 18px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: #f9fbfc;
+        }
+        input:focus, select:focus {
+            border-color: #0078d7;
+            box-shadow: 0 0 0 2px #cce6ff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #0078d7 60%, #00c6fb 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,120,215,0.08);
+            transition: background 0.3s, transform 0.2s;
+            letter-spacing: 0.5px;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #005fa3 60%, #00a6d7 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .result {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 1.25em;
+            color: #0078d7;
+            font-weight: 600;
+            min-height: 32px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s, transform 0.6s;
+        }
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+            animation: pulse 1.2s;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0,120,215,0.2);}
+            70% { box-shadow: 0 0 0 12px rgba(0,120,215,0);}
+            100% { box-shadow: 0 0 0 0 rgba(0,120,215,0);}
+        }
+        .history-section {
+            margin-top: 36px;
+            background: #f4f8fb;
+            border-radius: 10px;
+            padding: 18px 12px;
+            box-shadow: 0 1px 8px rgba(0,120,215,0.06);
+            animation: fadeInDown 1s 0.2s backwards;
+        }
+        .history-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0078d7;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .history-list {
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        .history-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e7ef;
+            font-size: 0.97em;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: popIn 0.7s;
+        }
+        .history-list li:last-child {
+            border-bottom: none;
+        }
+        .clear-btn {
+            display: block;
+            margin: 12px auto 0 auto;
+            background: #fff;
+            color: #0078d7;
+            border: 1px solid #0078d7;
+            border-radius: 5px;
+            padding: 6px 18px;
+            font-size: 0.98em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .clear-btn:hover {
+            background: #0078d7;
+            color: #fff;
+        }
+        /* Floating animated circles background */
+        .bg-circles {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.13;
+            animation: float 12s infinite linear;
+        }
+        .circle1 { width: 120px; height: 120px; background: #0078d7; left: 10vw; top: 10vh; animation-delay: 0s;}
+        .circle2 { width: 80px; height: 80px; background: #00c6fb; left: 70vw; top: 20vh; animation-delay: 2s;}
+        .circle3 { width: 60px; height: 60px; background: #005fa3; left: 50vw; top: 70vh; animation-delay: 4s;}
+        .circle4 { width: 100px; height: 100px; background: #00a6d7; left: 80vw; top: 60vh; animation-delay: 6s;}
+        @keyframes float {
+            0% { transform: translateY(0) scale(1);}
+            50% { transform: translateY(-40px) scale(1.08);}
+            100% { transform: translateY(0) scale(1);}
+        }
+        /* Responsive */
+        @media (max-width: 500px) {
+            .container { padding: 18px 6px; }
+            .history-section { padding: 10px 2px; }
+        }
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 180px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 7px 0;
+            position: absolute;
+            z-index: 2;
+            bottom: 125%; left: 50%; transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.95em;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-circles">
+        <div class="circle circle1"></div>
+        <div class="circle circle2"></div>
+        <div class="circle circle3"></div>
+        <div class="circle circle4"></div>
+    </div>
+    <div class="container">
+        <h2>Employee Salary Prediction</h2>
+        <form id="salaryForm" autocomplete="off">
+            <label for="name">Employee Name</label>
+            <input type="text" id="name" required>
+
+            <label for="experience">
+                Years of Experience
+                <span class="tooltip">?
+                    <span class="tooltiptext">Enter total years of relevant work experience.</span>
+                </span>
+            </label>
+            <input type="number" id="experience" min="0" step="0.1" required>
+
+            <label for="education">
+                Education Level
+                <span class="tooltip">?
+                    <span class="tooltiptext">Select the highest degree obtained.</span>
+                </span>
+            </label>
+            <select id="education" required>
+                <option value="">Select</option>
+                <option value="High School">High School</option>
+                <option value="Bachelor">Bachelor's</option>
+                <option value="Master">Master's</option>
+                <option value="PhD">PhD</option>
+            </select>
+
+            <label for="role">
+                Job Role
+                <span class="tooltip">?
+                    <span class="tooltiptext">E.g., Software Engineer, Manager, Analyst, etc.</span>
+                </span>
+            </label>
+            <input type="text" id="role" required>
+
+            <button type="submit">Predict Salary</button>
+        </form>
+        <div class="result" id="result"></div>
+        <div class="history-section" id="historySection" style="display:none;">
+            <div class="history-title">Prediction History</div>
+            <ul class="history-list" id="historyList"></ul>
+            <button class="clear-btn" id="clearHistoryBtn">Clear History</button>
+        </div>
+    </div>
+    <script>
+        // IndexedDB setup for storing employee data
+        let db;
+        const request = indexedDB.open("EmployeeSalaryDB", 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains("employees")) {
+                db.createObjectStore("employees", { keyPath: "id", autoIncrement: true });
+            }
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            loadHistory();
+        };
+
+        request.onerror = function(event) {
+            alert("Database error: " + event.target.errorCode);
+        };
+
+        // Simple salary prediction logic
+        function predictSalary(experience, education, role) {
+            let base = 25000;
+            base += experience * 3000;
+
+            switch (education) {
+                case "High School": base += 0; break;
+                case "Bachelor": base += 8000; break;
+                case "Master": base += 15000; break;
+                case "PhD": base += 25000; break;
+            }
+
+            // Example role-based adjustment
+            if (/manager/i.test(role)) base += 12000;
+            else if (/engineer/i.test(role)) base += 10000;
+            else if (/analyst/i.test(role)) base += 7000;
+            else base += 4000;
+
+            return Math.round(base);
+        }
+
+        document.getElementById("salaryForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value.trim();
+            const experience = parseFloat(document.getElementById("experience").value);
+            const education = document.getElementById("education").value;
+            const role = document.getElementById("role").value.trim();
+
+            const predictedSalary = predictSalary(experience, education, role);
+
+            // Store in IndexedDB
+            if (db) {
+                const tx = db.transaction("employees", "readwrite");
+                const store = tx.objectStore("employees");
+                store.add({
+                    name,
+                    experience,
+                    education,
+                    role,
+                    predictedSalary,
+                    date: new Date().toISOString()
+                }).onsuccess = function() {
+                    loadHistory();
+                };
+            }
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.textContent = `Predicted Salary for ${name}: $${predictedSalary.toLocaleString()}`;
+            resultDiv.classList.remove("show");
+            setTimeout(() => resultDiv.classList.add("show"), 50);
+        });
+
+        // Load prediction history from IndexedDB
+        function loadHistory() {
+            if (!db) return;
+            const tx = db.transaction("employees", "readonly");
+            const store = tx.objectStore("employees");
+            const req = store.getAll();
+            req.onsuccess = function() {
+                const data = req.result;
+                const historySection = document.getElementById("historySection");
+                const historyList = document.getElementById("historyList");
+                historyList.innerHTML = "";
+                if (data.length === 0) {
+                    historySection.style.display = "none";
+                    return;
+                }
+                // Show last 5 predictions, most recent first
+                data.sort((a, b) => new Date(b.date) - new Date(a.date));
+                data.slice(0, 5).forEach(item => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <span>
+                            <strong>${item.name}</strong> (${item.role})<br>
+                            <small>${item.education}, ${item.experience} yrs</small>
+                        </span>
+                        <span style="color:#0078d7;font-weight:600;">$${item.predictedSalary.toLocaleString()}</span>
+                    `;
+                    historyList.appendChild(li);
+                });
+                historySection.style.display = "block";
+            };
+        }
+
+        // Clear history
+        document.getElementById("clearHistoryBtn").onclick = function() {
+            if (!db) return;
+            const tx = db.transaction("employees", "readwrite");
+            const store = tx.objectStore("employees");
+            const clearReq = store.clear();
+            clearReq.onsuccess = function() {
+                loadHistory();
+            };
+        };
+    </script>
+</body>
+</html>
